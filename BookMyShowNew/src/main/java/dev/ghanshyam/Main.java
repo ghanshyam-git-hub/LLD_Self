@@ -62,8 +62,6 @@ public class Main {
             Booking booking = bookSeat(user4,show2,List.of(21,22,23));
         });
 
-
-
         t1.start();
         t2.start();
         t3.start();

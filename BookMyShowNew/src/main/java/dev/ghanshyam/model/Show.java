@@ -21,7 +21,6 @@ public class Show {
     LocalDateTime startTime;
     LocalDateTime endTime;
     Lock lock;
-    int showBasePrice;
     Pricing pricing;
     Map<Integer,Seat>seatMap;
 
@@ -59,7 +58,6 @@ public class Show {
                         .build();
 
                 lock.unlock();
-
 
         return booking;
     }
