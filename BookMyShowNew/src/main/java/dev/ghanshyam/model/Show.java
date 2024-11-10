@@ -84,7 +84,13 @@ public class Show {
             bookedSeats.add(seatMap.get(seatId));
 
         bookedSeats.stream().forEach(seat->seat.setSeatStatus(SeatStatus.UNBOOKED));
+        refund(booking);
+        System.out.println("Booking for booking id "+booking.getBooking_id()+ " for user "+booking.getUser().getUser_id()+" is cancelled.");
         return true;
+    }
+
+    private void refund(Booking booking){
+        System.out.println("Refund of amount "+booking.getTotalAmount() + " has been initiated");
     }
 
 }

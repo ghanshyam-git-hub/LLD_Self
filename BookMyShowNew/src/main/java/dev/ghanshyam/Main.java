@@ -43,23 +43,25 @@ public class Main {
 
         Thread t1 = new Thread(()->{
             User user1 = new User(1);
-            bookSeat(user1,show1,List.of(1,2,3,4,5));
+            Booking booking = bookSeat(user1,show1,List.of(1,2,3,4,5));
+            show1.cancelBooking(booking);
         });
 
         Thread t2 = new Thread(()->{
             User user2 = new User(2);
-            bookSeat(user2,show1,List.of(20,21,22,23,24));
+            Booking booking = bookSeat(user2,show1,List.of(20,21,22,23,24));
         });
 
         Thread t3 = new Thread(()->{
             User user3 = new User(3);
-            bookSeat(user3,show2,List.of(1,2,3,4,5));
+            Booking booking = bookSeat(user3,show2,List.of(1,2,3,4,5));
         });
 
         Thread t4 = new Thread(()->{
             User user4 = new User(4);
-            bookSeat(user4,show2,List.of(21,22,23));
+            Booking booking = bookSeat(user4,show2,List.of(21,22,23));
         });
+
 
 
         t1.start();
@@ -73,20 +75,23 @@ public class Main {
         t4.join();
     }
 
-    public static void bookSeat(User user, Show show,List<Integer>list){
+    public static Booking bookSeat(User user, Show show,List<Integer>list){
         try {
             Booking booking = show.bookSeats(user,list);
             Thread.sleep(1000);
-            System.out.println("Payement is done by user "
-                    +booking.getUser().getUser_id()
-                    + " for bookingId "+booking.getBooking_id()
-                    +" for show " + booking.getShow().getMovie().getMovieName() +" Time :"+booking.getShow().getStartTime().getHour()+"-"+booking.getShow().getEndTime().getHour()
-                    +"for seats "+booking.getSeatIdList()+" "
-                    +"total amount ="+ booking.getTotalAmount()
-                    +"payment done ="
-                    + show.confirmBookingAndPay(booking));
-
+            if(show.confirmBookingAndPay(booking)) {
+                System.out.println("Payement is done by user "
+                        + booking.getUser().getUser_id()
+                        + " for bookingId " + booking.getBooking_id()
+                        + " for show " + booking.getShow().getMovie().getMovieName() + " Time :" + booking.getShow().getStartTime().getHour() + "-" + booking.getShow().getEndTime().getHour()
+                        + "for seats " + booking.getSeatIdList() + " "
+                        + "total amount =" + booking.getTotalAmount()
+                        + "payment done");
+            }else{
+                throw new RuntimeException("Payment could not complete for the user "+booking.getUser().getUser_id()+" booking id "+booking.getBooking_id());
+            }
             System.out.println();
+            return booking;
         } catch (SeatAlreadyBookedException e) {
             System.out.println("Sorry user "+user.getUser_id());
             System.out.println("These seats "+list+" are already booked"+" for this show "+", pls book other seats");
@@ -94,6 +99,7 @@ public class Main {
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
+        throw new RuntimeException("Some unknown error");
     }
 
     public static Map<Integer, Seat> setSeatMap(){
