@@ -37,29 +37,30 @@ public class Show {
 
         lock.lock(); // even though we have to do double checking but this will be fast becoz in case of synchronized method invalid requests have to wait for the lock a long time only to discover that they are not valid
         // we have to do double checking here of the seats, else there can be double booking also, becoz in the first check it may not be booked but while it comes here it may get booked
-        for(Integer seatId:seatIdtoBeBooked){
-            Seat seat = seatMap.get(seatId);
-            if(seat.getSeatStatus()==SeatStatus.BOOKED || seat.getSeatStatus()==SeatStatus.PENDING)
-                throw new SeatAlreadyBookedException("Seat already booked");
+        try {
+            for (Integer seatId : seatIdtoBeBooked) {
+                Seat seat = seatMap.get(seatId);
+                if (seat.getSeatStatus() == SeatStatus.BOOKED || seat.getSeatStatus() == SeatStatus.PENDING)
+                    throw new SeatAlreadyBookedException("Seat already booked");
+            }
+
+            for (Integer seatId : seatIdtoBeBooked) {
+                Seat seat = seatMap.get(seatId);
+                seat.setSeatStatus(SeatStatus.PENDING);
+                amount += pricing.getPrice(seat);
+            }
+            booking = bookingBuilder.booking_id(Booking.globalbooking_id++)
+                    .user(user)
+                    .show(this)
+                    .bookingTime(LocalDateTime.now())
+                    .seatIdList(seatIdtoBeBooked)
+                    .paymentStatus(PaymentStatus.PENDING)
+                    .totalAmount(amount)
+                    .build();
+            return booking;
+        }finally {
+            lock.unlock();
         }
-
-                for (Integer seatId : seatIdtoBeBooked) {
-                    Seat seat = seatMap.get(seatId);
-                    seat.setSeatStatus(SeatStatus.PENDING);
-                    amount += pricing.getPrice(seat);
-                }
-                   booking = bookingBuilder.booking_id(Booking.globalbooking_id++)
-                        .user(user)
-                        .show(this)
-                        .bookingTime(LocalDateTime.now())
-                        .seatIdList(seatIdtoBeBooked)
-                        .paymentStatus(PaymentStatus.PENDING)
-                        .totalAmount(amount)
-                        .build();
-
-                lock.unlock();
-
-        return booking;
     }
 
     public synchronized boolean confirmBookingAndPay(Booking booking){
