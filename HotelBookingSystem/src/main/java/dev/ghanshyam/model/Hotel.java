@@ -14,6 +14,7 @@ import lombok.Setter;
 
 import java.sql.SQLOutput;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 @Getter
@@ -63,15 +64,23 @@ public class Hotel {
         Booking booking = null;
 
         if(roomIdList.stream()
-                .anyMatch(roomId->(roomMap.get(roomId).getBookingStatus()==BookingStatus.BOOKED)
-                        || (roomMap.get(roomId).getBookingStatus()==BookingStatus.BLOCKED))
+                .anyMatch(roomId->(roomMap.get(roomId).getBookingStatus()==BookingStatus.BOOKED))
         ) throw new RoomsNotAvailable("These rooms "+roomIdList+" are not available");
 
+        // now check if the blocked rooms are holding for more than 5 min
+
+        if(roomIdList.stream()
+                .filter(roomId->(roomMap.get(roomId).getBookingStatus()==BookingStatus.BLOCKED))
+                .anyMatch(roomId->
+                        (LocalDateTime.now().minus(5, ChronoUnit.MINUTES)
+                        .isBefore(roomMap.get(roomId).getBlockTime())
+        ))) throw new RoomsNotAvailable("These rooms "+roomIdList+" are not available, They are blocked, try some other rooms");
 
         int amount = 0;
         for(Integer roomId : roomIdList){
             Room room = roomMap.get(roomId);
             room.setBookingStatus(BookingStatus.BLOCKED);
+            room.setBlockTime(LocalDateTime.now());
             amount+=pricing.getPrice(room);
         }
 
@@ -81,6 +90,7 @@ public class Hotel {
                 .hotel(this)
                 .bookingStatus(BookingStatus.BLOCKED)
                 .roomIdList(roomIdList)
+                .blockTime(LocalDateTime.now())
                 .checkIn(checkInTime)
                 .checkOut(checkOutTime)
                 .amount(amount)
@@ -106,8 +116,21 @@ public class Hotel {
         for(Integer roomId : roomList){
             Room room = roomMap.get(roomId);
             room.setBookingStatus(BookingStatus.UNBOOKED);
+            room.setBlockTime(null);
         }
         booking.setBookingStatus(BookingStatus.CANCELLED);
         System.out.println("Booking cancelled for user "+booking.getUser().getUser_id() + " for booking Id="+ booking.getBooking_id() + " of amount ="+booking.getAmount() + " for rooms "+ booking.getRoomIdList());
+    }
+
+    public boolean checkout(Booking booking){
+        List<Integer>roomList = booking.getRoomIdList();
+        for(Integer roomId : roomList){
+            Room room = roomMap.get(roomId);
+            room.setBookingStatus(BookingStatus.UNBOOKED);
+            room.setBlockTime(null);
+        }
+        // payment logic ....
+        booking.setBookingStatus(BookingStatus.CHECKEDOUT);
+        return true;
     }
 }

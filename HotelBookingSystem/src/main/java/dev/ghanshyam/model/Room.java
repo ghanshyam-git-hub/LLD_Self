@@ -19,6 +19,7 @@ public abstract class Room {
     protected RoomType roomType;
     protected BookingStatus bookingStatus;
     protected int basePrice;
+    protected LocalDateTime blockTime;
 
     public Room(int room_id){
         this.room_id = room_id;

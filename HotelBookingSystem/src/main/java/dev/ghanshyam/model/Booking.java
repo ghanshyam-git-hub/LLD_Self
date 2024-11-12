@@ -19,6 +19,8 @@ public class Booking {
     List<Integer>roomIdList;
     @Setter
     BookingStatus bookingStatus;
+    @Setter
+    LocalDateTime blockTime;
     LocalDateTime checkIn;
     LocalDateTime checkOut;
     int amount;
